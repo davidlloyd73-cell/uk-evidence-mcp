@@ -25,6 +25,7 @@ Run:  python server.py   (speaks MCP over stdio)
 
 import re
 import json
+import html
 from typing import Optional
 from urllib.parse import quote_plus
 
@@ -90,6 +91,22 @@ def _slugify(name: str) -> str:
     return s.strip("-")
 
 
+def _as_text(value) -> str:
+    """Coerce a JSON field to a clean string.
+
+    Some NICE search fields (e.g. ``niceResultType``) come back as a string for
+    most results but as a list when a document has several values. Passing a
+    list into ``str.join`` raises
+    'sequence item 0: expected str instance, list found', so flatten any
+    list/tuple to a comma-joined string and normalise None to "".
+    """
+    if value is None:
+        return ""
+    if isinstance(value, (list, tuple)):
+        return ", ".join(_as_text(v) for v in value if v not in (None, ""))
+    return html.unescape(str(value))
+
+
 # --------------------------------------------------------------------------- #
 # NICE guidance
 # --------------------------------------------------------------------------- #
@@ -124,13 +141,13 @@ async def nice_search(query: str, max_results: int = 10) -> str:
 
     out = [f"NICE results for '{query}' ({min(len(docs), max_results)} shown):\n"]
     for d in docs[:max_results]:
-        title = re.sub(r"<[^>]+>", "", d.get("title") or d.get("titleNoHtml") or "(untitled)")
-        ref = d.get("guidanceRef") or ""
-        gtype = d.get("niceResultType") or d.get("niceGuidanceType") or ""
-        date = (d.get("lastUpdated") or d.get("publicationDate") or "")[:10]
-        path = d.get("pathAndQuery") or d.get("url") or ""
+        title = re.sub(r"<[^>]+>", "", _as_text(d.get("title") or d.get("titleNoHtml")) or "(untitled)")
+        ref = _as_text(d.get("guidanceRef"))
+        gtype = _as_text(d.get("niceResultType") or d.get("niceGuidanceType"))
+        date = _as_text(d.get("lastUpdated") or d.get("publicationDate"))[:10]
+        path = _as_text(d.get("pathAndQuery") or d.get("url"))
         link = path if path.startswith("http") else f"{NICE_BASE}{path}"
-        abstract = re.sub(r"<[^>]+>", "", (d.get("abstract") or d.get("metaDescription") or "")).strip()
+        abstract = re.sub(r"<[^>]+>", "", _as_text(d.get("abstract") or d.get("metaDescription"))).strip()
         head = f"- {title}"
         if ref:
             head += f"  [{ref}]"
