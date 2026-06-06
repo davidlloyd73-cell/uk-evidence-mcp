@@ -1,7 +1,7 @@
 # uk-evidence-mcp
 
 An MCP server that gives Claude access to **UK-accessible** clinical evidence:
-**NICE guidance**, **NICE Clinical Knowledge Summaries (CKS)**, and **PubMed**.
+**NICE guidance**, **NICE Clinical Knowledge Summaries (CKS)**, , MHRA, Safety Updates and **PubMed**.
 
 It exists because OpenEvidence withdrew from the UK and EU in 2026 (citing the
 EU AI Act), which makes the OpenEvidence-based MCP servers useless here. This
@@ -10,7 +10,7 @@ actually reach. All sources are public; **no API key is required**.
 
 ## What it does
 
-Seven tools, in two layers — find, then read the full text:
+Nine tools, in two layers — find, then read the full text:
 
 | Tool | Purpose |
 |------|---------|
